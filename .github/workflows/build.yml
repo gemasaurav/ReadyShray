@@ -41,11 +41,19 @@ jobs:
           echo "Found project at: $PROJECT_DIR"
           echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
 
-      - name: Download Vosk speech model
+      - name: Download and repackage Vosk speech model
         run: |
-          curl -L -o vosk-model.zip https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+          curl -L -o vosk-model-src.zip https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+          rm -rf vosk-extract && mkdir -p vosk-extract
+          unzip -q vosk-model-src.zip -d vosk-extract
+          MODEL_DIR=$(find vosk-extract -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          echo "Found model folder: $MODEL_DIR"
+          rm -f vosk-model-small-en.zip
+          (cd "$MODEL_DIR" && zip -r -q ../../vosk-model-small-en.zip .)
+          echo "----- Repackaged zip contents (should be model files directly, no wrapping folder) -----"
+          unzip -l vosk-model-small-en.zip | head -15
           mkdir -p "${{ steps.locate.outputs.project_dir }}/app/src/main/assets"
-          cp vosk-model.zip "${{ steps.locate.outputs.project_dir }}/app/src/main/assets/vosk-model-small-en.zip"
+          cp vosk-model-small-en.zip "${{ steps.locate.outputs.project_dir }}/app/src/main/assets/vosk-model-small-en.zip"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
