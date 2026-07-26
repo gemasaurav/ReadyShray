@@ -1,2 +1,0 @@
-# ReadyShray
-Claude.ai
